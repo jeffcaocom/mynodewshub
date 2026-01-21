@@ -1,494 +1,663 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAKE.EXE</title>
+    <title>多功能工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/brace-fold.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldgutter.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
-            font-family: 'Share Tech Mono', monospace;
-            background: #0a0a0f;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
             min-height: 100vh;
-            color: #00ff88;
+            overflow: hidden;
+            color: #e0e0e0;
+        }
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .tabs {
+            display: flex;
+            background: linear-gradient(90deg, #1a1a2e 0%, #0f0f23 100%);
+            border-bottom: 2px solid #00d4ff;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+            flex-shrink: 0;
+        }
+        .tab {
+            padding: 18px 35px;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+        }
+        .tab:hover {
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        .tab.active {
+            color: #00d4ff;
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.1) 0%, transparent 100%);
+        }
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+        }
+        .tab-content {
+            display: none;
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+        }
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+        .btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
             overflow: hidden;
         }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px),
-                linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px);
-            background-size: 30px 30px;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0,0,0,0.1),
-                rgba(0,0,0,0.1) 1px,
-                transparent 1px,
-                transparent 2px
-            );
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .game-container {
-            text-align: center;
-            background: rgba(10, 10, 15, 0.95);
-            border: 2px solid #00ff88;
-            padding: 30px;
-            box-shadow: 
-                0 0 20px rgba(0, 255, 136, 0.3),
-                inset 0 0 30px rgba(0, 255, 136, 0.05);
-            position: relative;
-            z-index: 1;
-        }
-
-        .game-container::before {
+        .btn::before {
             content: '';
             position: absolute;
-            top: -5px;
-            left: -5px;
-            right: -5px;
-            bottom: -5px;
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            pointer-events: none;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
         }
-
-        .game-container::after {
-            content: '';
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 10px;
-            height: 10px;
-            border-left: 2px solid #00ff88;
-            border-top: 2px solid #00ff88;
+        .btn:hover::before {
+            left: 100%;
         }
-
-        h1 {
-            margin-bottom: 25px;
-            text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 30px #00ff88;
-            letter-spacing: 5px;
-            font-size: 2.5rem;
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: #0a0a0a;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
         }
-
-        .score-board {
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.6);
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+            color: #0a0a0a;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.4);
+        }
+        .btn-success:hover {
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.6);
+            transform: translateY(-2px);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #ffaa00 0%, #ff8800 100%);
+            color: #0a0a0a;
+            box-shadow: 0 4px 15px rgba(255, 170, 0, 0.4);
+        }
+        .btn-warning:hover {
+            box-shadow: 0 6px 20px rgba(255, 170, 0, 0.6);
+            transform: translateY(-2px);
+        }
+        .json-editor {
             display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-            gap: 20px;
+            gap: 15px;
+            flex: 1;
+            min-height: 0;
         }
-
-        .score-board span {
-            background: rgba(0, 255, 136, 0.05);
-            padding: 10px 25px;
-            border: 1px solid #00ff88;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        .json-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(26, 26, 46, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            padding: 15px;
+            backdrop-filter: blur(10px);
         }
-
-        .score-board strong {
-            color: #00ffff;
-            text-shadow: 0 0 10px #00ffff;
+        .json-panel h3 {
+            margin-bottom: 12px;
+            color: #00d4ff;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
         }
-
-        #gameCanvas {
-            background: #050508;
-            border: 2px solid #00ff88;
-            box-shadow: 
-                0 0 30px rgba(0, 255, 136, 0.2),
-                inset 0 0 50px rgba(0, 0, 0, 0.8);
+        .json-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
         }
-
-        .controls {
-            margin-top: 20px;
+        .json-status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 10px;
+            font-weight: 500;
         }
-
-        button {
-            background: transparent;
+        .json-status.valid {
             color: #00ff88;
-            border: 2px solid #00ff88;
-            padding: 12px 35px;
-            font-size: 1.1rem;
-            font-family: 'Share Tech Mono', monospace;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+        .json-status.invalid {
+            color: #ff4757;
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+        .CodeMirror {
+            height: 100%;
+            font-size: 14px;
+            border-radius: 8px;
+            background: rgba(10, 10, 20, 0.8) !important;
+        }
+        .js-editor {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+            min-height: 0;
+        }
+        .js-panel {
+            flex: 1;
+            background: rgba(26, 26, 46, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+        }
+        .js-panel h3 {
+            color: #00d4ff;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        .js-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        #jsInput, #jsOutput {
+            flex: 1;
+            width: 100%;
+            background: rgba(10, 10, 20, 0.8);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            padding: 15px;
+            resize: none;
+            outline: none;
+        }
+        #jsInput:focus, #jsOutput:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        #jsOutput {
+            background: rgba(10, 10, 20, 0.6);
+        }
+        .calendar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+        .calendar-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: center;
+            background: rgba(26, 26, 46, 0.6);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        select {
+            padding: 10px 20px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            background: rgba(10, 10, 20, 0.8);
+            color: #e0e0e0;
             cursor: pointer;
-            transition: all 0.2s;
-            margin: 5px;
+            transition: all 0.3s;
+            outline: none;
+        }
+        select:hover, select:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        select option {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+        .calendar {
+            background: rgba(26, 26, 46, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .calendar-header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: #0a0a0a;
+            font-size: 24px;
+            font-weight: 700;
+            border-radius: 8px;
+            margin-bottom: 15px;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
-
-        button:hover {
-            background: rgba(0, 255, 136, 0.1);
-            box-shadow: 
-                0 0 20px rgba(0, 255, 136, 0.5),
-                inset 0 0 20px rgba(0, 255, 136, 0.1);
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 8px 8px 0 0;
         }
-
-        .instructions {
-            margin-top: 20px;
-            font-size: 0.85rem;
-            color: #666;
-            border-top: 1px solid #00ff88;
-            padding-top: 15px;
-        }
-
-        .instructions p {
-            margin: 5px 0;
-        }
-
-        .game-over {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(10, 10, 15, 0.98);
-            border: 2px solid #ff0055;
-            padding: 50px;
+        .calendar-weekdays div {
+            padding: 12px;
             text-align: center;
-            z-index: 1000;
-            display: none;
-            box-shadow: 
-                0 0 50px rgba(255, 0, 85, 0.5),
-                inset 0 0 30px rgba(255, 0, 85, 0.1);
+            font-weight: 700;
+            color: #00d4ff;
+            font-size: 14px;
+            text-transform: uppercase;
         }
-
-        .game-over h2 {
-            color: #ff0055;
-            font-size: 2.5rem;
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+        .calendar-day {
+            padding: 18px 12px;
+            text-align: center;
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .calendar-day:hover {
+            background: rgba(0, 212, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+            transform: scale(1.1);
+        }
+        .calendar-day.today {
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            color: #0a0a0a;
+            font-weight: 700;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+            transform: scale(1.1);
+        }
+        .calendar-day.other-month {
+            color: #4b5563;
+        }
+        h2 {
+            color: #00d4ff;
+            font-size: 28px;
+            font-weight: 700;
             margin-bottom: 20px;
-            text-shadow: 0 0 20px #ff0055, 0 0 40px #ff0055;
-            letter-spacing: 3px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
         }
-
-        .game-over p {
-            font-size: 1.5rem;
-            margin-bottom: 25px;
-            color: #fff;
-        }
-
-        .game-over span {
-            color: #00ffff;
-            text-shadow: 0 0 15px #00ffff;
-        }
-
-        .scanline {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                to bottom,
-                transparent 50%,
-                rgba(0, 255, 136, 0.02) 50%
-            );
-            background-size: 100% 4px;
-            pointer-events: none;
-            z-index: 999;
+        @media (max-width: 768px) {
+            .json-editor {
+                flex-direction: column;
+            }
+            .tab {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+            .calendar-weekdays div, .calendar-day {
+                padding: 10px 8px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="scanline"></div>
-    
-    <div class="game-container">
-        <h1>&lt;SNAKE.EXE&gt;</h1>
-        
-        <div class="score-board">
-            <span>[SCORE: <strong id="score">000</strong>]</span>
-            <span>[BEST: <strong id="highScore">000</strong>]</span>
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('json')">JSON编辑器</button>
+            <button class="tab" onclick="switchTab('js')">JS混淆压缩</button>
+            <button class="tab" onclick="switchTab('calendar')">万年历</button>
         </div>
 
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-
-        <div class="controls">
-            <button id="startBtn">&gt; INITIALIZE</button>
-            <button id="pauseBtn">&gt; PAUSE</button>
+        <div id="json" class="tab-content active">
+            <h2>JSON编辑器</h2>
+            <div class="json-editor">
+                <div class="json-panel">
+                    <h3>编辑</h3>
+                    <div class="json-buttons">
+                        <button class="btn btn-primary" onclick="formatJSON()">格式化</button>
+                        <button class="btn btn-success" onclick="minifyJSON()">压缩</button>
+                    </div>
+                    <textarea id="jsonInput"></textarea>
+                    <div id="jsonStatus" class="json-status"></div>
+                </div>
+                <div class="json-panel">
+                    <h3>预览</h3>
+                    <textarea id="jsonOutput"></textarea>
+                </div>
+            </div>
         </div>
 
-        <div class="instructions">
-            <p>&gt; CONTROLS: ARROW KEYS / WASD</p>
-            <p>&gt; SPACE: PAUSE / RESUME</p>
-            <p>&gt; CONSUME DATA PACKETS TO GROW</p>
+        <div id="js" class="tab-content">
+            <h2>JavaScript代码混淆和压缩</h2>
+            <div class="js-editor">
+                <div class="js-panel">
+                    <h3>输入代码</h3>
+                    <textarea id="jsInput" placeholder="输入JavaScript代码"></textarea>
+                </div>
+                <div class="js-buttons">
+                    <button class="btn btn-primary" onclick="minifyJS()">压缩</button>
+                    <button class="btn btn-warning" onclick="obfuscateJS()">混淆</button>
+                    <button class="btn btn-success" onclick="clearJS()">清空</button>
+                </div>
+                <div class="js-panel">
+                    <h3>结果</h3>
+                    <textarea id="jsOutput" placeholder="结果将显示在这里" readonly></textarea>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div class="game-over" id="gameOver">
-        <h2>&lt;SYSTEM FAILURE&gt;</h2>
-        <p>FINAL SCORE: <span id="finalScore">000</span></p>
-        <button onclick="restartGame()">&gt; REBOOT SYSTEM</button>
+        <div id="calendar" class="tab-content">
+            <h2>万年历</h2>
+            <div class="calendar-container">
+                <div class="calendar-controls">
+                    <select id="yearSelect"></select>
+                    <select id="monthSelect">
+                        <option value="0">1月</option>
+                        <option value="1">2月</option>
+                        <option value="2">3月</option>
+                        <option value="3">4月</option>
+                        <option value="4">5月</option>
+                        <option value="5">6月</option>
+                        <option value="6">7月</option>
+                        <option value="7">8月</option>
+                        <option value="8">9月</option>
+                        <option value="9">10月</option>
+                        <option value="10">11月</option>
+                        <option value="11">12月</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="goToToday()">今天</button>
+                </div>
+                <div class="calendar">
+                    <div class="calendar-header" id="calendarTitle"></div>
+                    <div class="calendar-weekdays">
+                        <div>日</div>
+                        <div>一</div>
+                        <div>二</div>
+                        <div>三</div>
+                        <div>四</div>
+                        <div>五</div>
+                        <div>六</div>
+                    </div>
+                    <div class="calendar-days" id="calendarDays"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreElement = document.getElementById('score');
-        const highScoreElement = document.getElementById('highScore');
-        const gameOverElement = document.getElementById('gameOver');
-        const finalScoreElement = document.getElementById('finalScore');
-        const startBtn = document.getElementById('startBtn');
-        const pauseBtn = document.getElementById('pauseBtn');
+        let editorInput, editorOutput;
 
-        const gridSize = 20;
-        const tileCount = canvas.width / gridSize;
-
-        let snake = [];
-        let food = {};
-        let direction = { x: 0, y: 0 };
-        let nextDirection = { x: 0, y: 0 };
-        let score = 0;
-        let highScore = localStorage.getItem('snakeHighScore') || 0;
-        let gameLoop = null;
-        let gameSpeed = 100;
-        let isGameRunning = false;
-        let isPaused = false;
-
-        highScoreElement.textContent = String(highScore).padStart(3, '0');
-
-        function initGame() {
-            snake = [
-                { x: 10, y: 10 },
-                { x: 9, y: 10 },
-                { x: 8, y: 10 }
-            ];
-            direction = { x: 1, y: 0 };
-            nextDirection = { x: 1, y: 0 };
-            score = 0;
-            gameSpeed = 100;
-            scoreElement.textContent = '000';
-            gameOverElement.style.display = 'none';
-            placeFood();
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            setTimeout(() => {
+                if (editorInput) editorInput.refresh();
+                if (editorOutput) editorOutput.refresh();
+            }, 10);
         }
 
-        function placeFood() {
-            do {
-                food = {
-                    x: Math.floor(Math.random() * tileCount),
-                    y: Math.floor(Math.random() * tileCount)
-                };
-            } while (snake.some(segment => segment.x === food.x && segment.y === food.y));
-        }
-
-        function drawGrid() {
-            ctx.strokeStyle = 'rgba(0, 255, 136, 0.1)';
-            ctx.lineWidth = 1;
-            
-            for (let i = 0; i <= tileCount; i++) {
-                ctx.beginPath();
-                ctx.moveTo(i * gridSize, 0);
-                ctx.lineTo(i * gridSize, canvas.height);
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.moveTo(0, i * gridSize);
-                ctx.lineTo(canvas.width, i * gridSize);
-                ctx.stroke();
-            }
-        }
-
-        function draw() {
-            ctx.fillStyle = '#050508';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            drawGrid();
-            drawFood();
-            drawSnake();
-        }
-
-        function drawFood() {
-            const x = food.x * gridSize;
-            const y = food.y * gridSize;
-            
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#ff0055';
-            ctx.fillStyle = '#ff0055';
-            ctx.fillRect(x + 4, y + 4, gridSize - 8, gridSize - 8);
-            
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#ff0055';
-            ctx.strokeStyle = '#ff0055';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x + 2, y + 2, gridSize - 4, gridSize - 4);
-            
-            ctx.shadowBlur = 0;
-        }
-
-        function drawSnake() {
-            snake.forEach((segment, index) => {
-                const x = segment.x * gridSize;
-                const y = segment.y * gridSize;
-                
-                if (index === 0) {
-                    ctx.shadowBlur = 20;
-                    ctx.shadowColor = '#00ff88';
-                    ctx.fillStyle = '#00ff88';
-                    ctx.fillRect(x + 2, y + 2, gridSize - 4, gridSize - 4);
-                    
-                    ctx.fillStyle = '#00ffff';
-                    ctx.fillRect(x + 6, y + 6, 4, 4);
-                    ctx.fillRect(x + 10, y + 6, 4, 4);
-                } else {
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = '#00ff88';
-                    ctx.fillStyle = '#00ff88';
-                    ctx.fillRect(x + 3, y + 3, gridSize - 6, gridSize - 6);
-                    
-                    ctx.strokeStyle = '#00ff88';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(x + 4, y + 4, gridSize - 8, gridSize - 8);
-                }
-                
-                ctx.shadowBlur = 0;
+        function initCodeMirror() {
+            editorInput = CodeMirror.fromTextArea(document.getElementById('jsonInput'), {
+                mode: { name: 'javascript', json: true },
+                theme: 'dracula',
+                lineNumbers: true,
+                foldGutter: true,
+                gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                tabSize: 4
             });
+
+            editorOutput = CodeMirror.fromTextArea(document.getElementById('jsonOutput'), {
+                mode: { name: 'javascript', json: true },
+                theme: 'dracula',
+                lineNumbers: true,
+                foldGutter: true,
+                gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+                readOnly: true,
+                indentUnit: 4,
+                tabSize: 4
+            });
+
+            editorInput.on('change', validateJSON);
         }
 
-        function update() {
-            direction = { ...nextDirection };
-
-            const head = {
-                x: snake[0].x + direction.x,
-                y: snake[0].y + direction.y
-            };
-
-            if (checkCollision(head)) {
-                gameOver();
+        function validateJSON() {
+            const value = editorInput.getValue();
+            const statusDiv = document.getElementById('jsonStatus');
+            
+            if (value.trim() === '') {
+                statusDiv.className = 'json-status';
+                statusDiv.textContent = '';
                 return;
             }
 
-            snake.unshift(head);
-
-            if (head.x === food.x && head.y === food.y) {
-                score += 10;
-                scoreElement.textContent = String(score).padStart(3, '0');
-                
-                if (score > highScore) {
-                    highScore = score;
-                    highScoreElement.textContent = String(highScore).padStart(3, '0');
-                    localStorage.setItem('snakeHighScore', highScore);
-                }
-                
-                placeFood();
-                
-                if (gameSpeed > 50) {
-                    gameSpeed -= 2;
-                    clearInterval(gameLoop);
-                    gameLoop = setInterval(gameStep, gameSpeed);
-                }
-            } else {
-                snake.pop();
+            try {
+                JSON.parse(value);
+                statusDiv.className = 'json-status valid';
+                statusDiv.textContent = '✓ JSON格式正确';
+            } catch (e) {
+                statusDiv.className = 'json-status invalid';
+                statusDiv.textContent = '✗ JSON格式错误: ' + e.message;
             }
         }
 
-        function checkCollision(head) {
-            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
-                return true;
+        function formatJSON() {
+            const value = editorInput.getValue();
+            try {
+                const obj = JSON.parse(value);
+                editorInput.setValue(JSON.stringify(obj, null, 4));
+                editorOutput.setValue(JSON.stringify(obj, null, 4));
+                validateJSON();
+            } catch (e) {
+                alert('JSON格式错误: ' + e.message);
+            }
+        }
+
+        function minifyJSON() {
+            const value = editorInput.getValue();
+            try {
+                const obj = JSON.parse(value);
+                const minified = JSON.stringify(obj);
+                editorInput.setValue(minified);
+                editorOutput.setValue(minified);
+                validateJSON();
+            } catch (e) {
+                alert('JSON格式错误: ' + e.message);
+            }
+        }
+
+        function minifyJS() {
+            const input = document.getElementById('jsInput').value;
+            let output = input
+                .replace(/\/\/.*$/gm, '')
+                .replace(/\/\*[\s\S]*?\*\//g, '')
+                .replace(/\s+/g, ' ')
+                .replace(/\s*([{}();,:<>=+\-*\/])\s*/g, '$1')
+                .trim();
+            document.getElementById('jsOutput').value = output;
+        }
+
+        function obfuscateJS() {
+            const input = document.getElementById('jsInput').value;
+            const variables = [];
+            const varPattern = /var\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g;
+            let match;
+            while ((match = varPattern.exec(input)) !== null) {
+                if (!variables.includes(match[1])) {
+                    variables.push(match[1]);
+                }
+            }
+            let output = input;
+            const obfuscatedNames = [];
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$';
+            for (let i = 0; i < variables.length; i++) {
+                let name = '';
+                let n = i;
+                do {
+                    name = chars[n % chars.length] + name;
+                    n = Math.floor(n / chars.length);
+                } while (n > 0);
+                obfuscatedNames.push(name);
+            }
+            variables.forEach((oldName, index) => {
+                const newName = obfuscatedNames[index];
+                const regex = new RegExp('\\b' + oldName + '\\b', 'g');
+                output = output.replace(regex, newName);
+            });
+            output = output
+                .replace(/\/\/.*$/gm, '')
+                .replace(/\/\*[\s\S]*?\*\//g, '')
+                .replace(/\s+/g, ' ')
+                .replace(/\s*([{}();,:<>=+\-*\/])\s*/g, '$1')
+                .trim();
+            document.getElementById('jsOutput').value = output;
+        }
+
+        function clearJS() {
+            document.getElementById('jsInput').value = '';
+            document.getElementById('jsOutput').value = '';
+        }
+
+        function initCalendar() {
+            const yearSelect = document.getElementById('yearSelect');
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear - 100; i <= currentYear + 100; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i + '年';
+                if (i === currentYear) option.selected = true;
+                yearSelect.appendChild(option);
+            }
+            document.getElementById('monthSelect').value = new Date().getMonth();
+            renderCalendar();
+            yearSelect.addEventListener('change', renderCalendar);
+            document.getElementById('monthSelect').addEventListener('change', renderCalendar);
+        }
+
+        function renderCalendar() {
+            const year = parseInt(document.getElementById('yearSelect').value);
+            const month = parseInt(document.getElementById('monthSelect').value);
+            const today = new Date();
+            
+            document.getElementById('calendarTitle').textContent = year + '年' + (month + 1) + '月';
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDay = firstDay.getDay();
+            const totalDays = lastDay.getDate();
+            
+            const prevMonth = new Date(year, month, 0);
+            const prevMonthDays = prevMonth.getDate();
+            
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+            
+            for (let i = startDay - 1; i >= 0; i--) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day other-month';
+                day.textContent = prevMonthDays - i;
+                calendarDays.appendChild(day);
             }
             
-            return snake.some(segment => segment.x === head.x && segment.y === head.y);
-        }
-
-        function gameOver() {
-            clearInterval(gameLoop);
-            isGameRunning = false;
-            finalScoreElement.textContent = String(score).padStart(3, '0');
-            gameOverElement.style.display = 'block';
-            startBtn.textContent = '&gt; INITIALIZE';
-            pauseBtn.textContent = '&gt; PAUSE';
-        }
-
-        function gameStep() {
-            if (!isPaused) {
-                update();
-                draw();
+            for (let i = 1; i <= totalDays; i++) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day';
+                day.textContent = i;
+                if (today.getFullYear() === year && today.getMonth() === month && today.getDate() === i) {
+                    day.classList.add('today');
+                }
+                calendarDays.appendChild(day);
+            }
+            
+            const remainingDays = 42 - (startDay + totalDays);
+            for (let i = 1; i <= remainingDays; i++) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day other-month';
+                day.textContent = i;
+                calendarDays.appendChild(day);
             }
         }
 
-        function startGame() {
-            if (!isGameRunning) {
-                initGame();
-                isGameRunning = true;
-                isPaused = false;
-                startBtn.textContent = '&gt; RESTART';
-                pauseBtn.textContent = '&gt; PAUSE';
-                draw();
-                gameLoop = setInterval(gameStep, gameSpeed);
-            } else {
-                restartGame();
-            }
+        function goToToday() {
+            const today = new Date();
+            document.getElementById('yearSelect').value = today.getFullYear();
+            document.getElementById('monthSelect').value = today.getMonth();
+            renderCalendar();
         }
 
-        function restartGame() {
-            clearInterval(gameLoop);
-            startGame();
-        }
+        window.onload = function() {
+            initCodeMirror();
+            initCalendar();
+        };
 
-        function togglePause() {
-            if (isGameRunning) {
-                isPaused = !isPaused;
-                pauseBtn.textContent = isPaused ? '&gt; RESUME' : '&gt; PAUSE';
-            }
-        }
-
-        document.addEventListener('keydown', (e) => {
-            switch(e.key) {
-                case 'ArrowUp':
-                case 'w':
-                case 'W':
-                    if (direction.y !== 1) nextDirection = { x: 0, y: -1 };
-                    break;
-                case 'ArrowDown':
-                case 's':
-                case 'S':
-                    if (direction.y !== -1) nextDirection = { x: 0, y: 1 };
-                    break;
-                case 'ArrowLeft':
-                case 'a':
-                case 'A':
-                    if (direction.x !== 1) nextDirection = { x: -1, y: 0 };
-                    break;
-                case 'ArrowRight':
-                case 'd':
-                case 'D':
-                    if (direction.x !== -1) nextDirection = { x: 1, y: 0 };
-                    break;
-                case ' ':
-                    if (isGameRunning) togglePause();
-                    break;
-            }
-        });
-
-        startBtn.addEventListener('click', startGame);
-        pauseBtn.addEventListener('click', togglePause);
-
-        initGame();
-        draw();
+        window.onresize = function() {
+            if (editorInput) editorInput.refresh();
+            if (editorOutput) editorOutput.refresh();
+        };
     </script>
 </body>
 </html>
